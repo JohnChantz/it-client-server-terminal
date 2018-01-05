@@ -3,18 +3,19 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 #define MAX 100
 
 int main(int argc, char **argv)
 {
-    int sfd, n;
+    int sfd, n, port;
     socklen_t len;
     char sline[MAX], rline[MAX + 1];
     struct sockaddr_in saddr;
 
-    if (argc != 2)
+    if (argc != 3)
     {
-        printf("Usage: %s ipaddress\n", argv[0]);
+        printf("Usage: %s ipaddress port\n", argv[0]);
         return -1;
     }
 
@@ -23,7 +24,8 @@ int main(int argc, char **argv)
     bzero(&saddr, sizeof(saddr));
     saddr.sin_family = AF_INET;
     inet_pton(AF_INET, argv[1], &saddr.sin_addr);
-    saddr.sin_port = htons(2910);
+    port = atoi(argv[2]);
+    saddr.sin_port = htons(port);
 
     printf("Client Running\n");
     while (fgets(sline, MAX, stdin) != NULL)
@@ -32,6 +34,7 @@ int main(int argc, char **argv)
         sendto(sfd, sline, strlen(sline), 0, (struct sockaddr *)&saddr, len);
         n = recvfrom(sfd, rline, MAX, 0, NULL, NULL);
         rline[n] = 0;
+        printf("server reply: ");
         fputs(rline, stdout);
     }
 
