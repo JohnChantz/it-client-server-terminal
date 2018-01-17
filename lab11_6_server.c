@@ -3,26 +3,19 @@
 #include <strings.h>
 #include <netinet/in.h>
 
-int main(int argc, char **argv)
+int main()
 {
-    int sfd, n, port;
+    int sfd, n;
     socklen_t len;
     char line[128];
     struct sockaddr_in saddr, caddr;
-
-    if (argc != 2)
-    {
-        printf("Usage: %s port\n", argv[0]);
-        return -1;
-    }
 
     sfd = socket(AF_INET, SOCK_DGRAM, 0);
 
     bzero(&saddr, sizeof(saddr));
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    port = atoi(argv[1]);
-    saddr.sin_port = htons(port);
+    saddr.sin_port = htons(2910);
 
     bind(sfd, (struct sockaddr *)&saddr, sizeof(saddr));
 

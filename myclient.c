@@ -1,42 +1,63 @@
 #include <stdio.h>
-#include <sys/socket.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <netdb.h>
 
-#define MAX 100
+void error(const char *msg) {
+    perror(msg);
+    exit(0);
+}
 
-int main(int argc, char **argv)
-{
-    int sfd, n, port;
-    socklen_t len;
-    char sline[MAX], rline[MAX + 1];
-    struct sockaddr_in saddr;
+int main(int argc, char *argv[]) {
+    int sockfd, portno, n;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+    char buffer[256];
 
-    if (argc != 3)
-    {
-        printf("Usage: %s ipaddress port\n", argv[0]);
-        return -1;
+    if (argc < 3) {
+        fprintf(stderr, "usage %s hostname port\n", argv[0]);
+        exit(0);
     }
-
-    sfd = socket(AF_INET, SOCK_DGRAM, 0);
-
-    bzero(&saddr, sizeof(saddr));
-    saddr.sin_family = AF_INET;
-    inet_pton(AF_INET, argv[1], &saddr.sin_addr);
-    port = atoi(argv[2]);
-    saddr.sin_port = htons(port);
-
-    printf("Client Running\n");
-    while (fgets(sline, MAX, stdin) != NULL)
-    {
-        len = sizeof(saddr);
-        sendto(sfd, sline, strlen(sline), 0, (struct sockaddr *)&saddr, len);
-        n = recvfrom(sfd, rline, MAX, 0, NULL, NULL);
-        rline[n] = 0;
-        printf("server reply: ");
-        fputs(rline, stdout);
+    portno = atoi(argv[2]);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        error("ERROR opening socket");
     }
-
-    return 0;
+    server = gethostbyname(argv[1]);
+    if (server == NULL) {
+        fprintf(stderr, "ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr,(char *)&serv_addr.sin_addr.s_addr,server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+        error("ERROR connecting");
+    }
+    while(1) {
+        printf("%s:>",argv[1]);
+        bzero(buffer, 256);
+        fgets(buffer, 255, stdin);
+        int ret=strcmp(buffer,"quit\n");
+        if(ret==0)
+        {   printf("Client disconecting!\n");
+            break;
+        } else {
+            n = write(sockfd, buffer, strlen(buffer));
+            if (n < 0)
+                error("ERROR writing to socket");
+            bzero(buffer, 256);
+            n = read(sockfd, buffer, 255);
+            if (n < 0)
+                error("ERROR reading from socket");
+            printf("%s\n", buffer);
+        }
+    }
+    close(sockfd);
+    exit(EXIT_SUCCESS);
 }
