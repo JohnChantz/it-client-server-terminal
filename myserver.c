@@ -87,7 +87,8 @@ int main(int argc, char * argv[]) {
                 if (ret != NULL) {
                     *ret = 0;
                 }
-                tok_command(args,buffer); 
+                if(buffer[0]!='\0')
+                    tok_command(args,buffer);
                 int pid, status;
                 if ((pid = fork()) == -1) {
                     perror("fork");
