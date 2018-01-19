@@ -40,12 +40,13 @@ int main(int argc, char *argv[]) {
         error("ERROR connecting");
     }
     while(1) {
-        printf("%s:>",argv[1]);
+        fprintf(stdout,"%s:>",argv[1]);
         bzero(buffer, 256);
         fgets(buffer, 255, stdin);
         int ret=strcmp(buffer,"quit\n");
-        if(ret==0)
-        {   printf("Client disconecting!\n");
+        if(ret==0){   
+            printf("Client disconecting!\n");
+            bzero(buffer, 256);
             break;
         } else {
             n = write(sockfd, buffer, strlen(buffer));
@@ -58,6 +59,7 @@ int main(int argc, char *argv[]) {
             printf("%s\n", buffer);
         }
     }
-    close(sockfd);
+    // close(sockfd);
+    shutdown(sockfd,SHUT_RDWR);
     exit(EXIT_SUCCESS);
 }
