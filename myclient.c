@@ -6,17 +6,32 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <signal.h>
+
+
+int sockfd, n;
 
 void error(const char *msg) {
     perror(msg);
     exit(0);
 }
+void signal_handler(int signum) {
+    printf("Termination signal detected, client terminating!\n");
+    char *buffer="quit";
+    n = write(sockfd, buffer, strlen(buffer));
+    if (n < 0)
+            error("ERROR writing to socket");
+    close(sockfd);        
+    exit(signum);
+}
 
 int main(int argc, char *argv[]) {
-    int sockfd, portno, n;
+    int portno;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[1024];
+
+    signal(SIGINT,signal_handler);
 
     if (argc < 3) {
         fprintf(stderr, "usage %s hostname port\n", argv[0]);
@@ -44,22 +59,20 @@ int main(int argc, char *argv[]) {
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);
         int ret=strcmp(buffer,"quit\n");
+        n = write(sockfd, buffer, strlen(buffer));
+        if (n < 0)
+            error("ERROR writing to socket");
         if(ret==0){   
             printf("Client disconecting!\n");
-            bzero(buffer, 1024);
             break;
-        } else {
-            n = write(sockfd, buffer, strlen(buffer));
-            if (n < 0)
-                error("ERROR writing to socket");
-            bzero(buffer, 1024);
-            n = read(sockfd, buffer, 1023);
-            if (n < 0)
-                error("ERROR reading from socket");
-            printf("%s\n", buffer);
         }
+        bzero(buffer, 1024);
+        n = read(sockfd, buffer, 1023);
+        if (n < 0)
+            error("ERROR reading from socket");
+        printf("%s\n", buffer);
     }
-    // close(sockfd);
-    shutdown(sockfd,SHUT_RDWR);
+    close(sockfd);
+    // shutdown(sockfd,SHUT_RDWR);
     exit(EXIT_SUCCESS);
 }

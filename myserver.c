@@ -23,7 +23,6 @@ void tok_command(char **args,char *buffer){
     char *token;
     token = strtok(buffer," ");
     while(token != NULL){
-        // strcpy(args[i],token);
         args[i]=token;
         token = strtok(NULL," ");
         i++;
@@ -41,7 +40,6 @@ int main(int argc, char * argv[]) {
     char *args[10];
 
     signal(SIGINT,signal_handler);
-    // signal(SIGCHLD,signal_handler);
 
     if (argc < 2) {
         fprintf(stderr, "No port provided\n");
@@ -77,18 +75,21 @@ int main(int argc, char * argv[]) {
             error("ERROR in new process creation");
         }
         if(pid==0) {
-            close(sockfd);
             while (1) {
                 bzero(buffer, 256);
                 n = read(newsockfd, buffer, 255);
                 if (n < 0) error("ERROR reading from socket");
-                printf("Executing command: %s", buffer);
                 char * ret = strchr(buffer, '\n');
                 if (ret != NULL) {
                     *ret = 0;
                 }
-                if(buffer[0]!='\0')
-                    tok_command(args,buffer);
+                if(strcmp(buffer,"quit")==0){
+                    fprintf(stdout,"Client disconnected!\n");
+                    break;
+                }else if(buffer[0]!='\0'){
+                    printf("Executing command: %s\n", buffer);
+                    tok_command(args,buffer);                    
+                }
                 int pid, status;
                 if ((pid = fork()) == -1) {
                     perror("fork");
@@ -107,9 +108,7 @@ int main(int argc, char * argv[]) {
                     exit(EXIT_FAILURE);
                 }
             }
-        }else{
-            close(newsockfd);
         }
     }
-    return 0;
+    exit(EXIT_SUCCESS);
 }
