@@ -8,7 +8,6 @@
 #include <netdb.h>
 #include <signal.h>
 
-
 int sockfd, n;
 
 void error(const char *msg) {
@@ -16,7 +15,7 @@ void error(const char *msg) {
     exit(0);
 }
 
-void signal_handler(int signum) {
+void signal_handler(int signum) {   //when Ctrl+C signal is detected in client, inform server that a client disconnected
     printf("\nTermination signal detected, client terminating!\n");
     char *buffer = "quit";
     n = write(sockfd, buffer, strlen(buffer));
@@ -32,7 +31,7 @@ int main(int argc, char *argv[]) {
     struct hostent *server;
     char buffer[1024];
 
-    signal(SIGINT, signal_handler);
+    signal(SIGINT, signal_handler); //set signal_handler() for SIGINT
 
     if (argc < 3) {
         fprintf(stderr, "usage %s hostname port\n", argv[0]);
@@ -56,14 +55,14 @@ int main(int argc, char *argv[]) {
         error("ERROR connecting");
     }
     while (1) {
-        fprintf(stdout, "%s:>", argv[1]);
+        fprintf(stdout, "%s:>", argv[1]);   //print client's prompt
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);
-        int ret = strcmp(buffer, "quit\n");
+        int ret = strcmp(buffer, "quit\n"); //check if client wants to disconnect, typed "quit"
         n = write(sockfd, buffer, strlen(buffer));
         if (n < 0)
             error("ERROR writing to socket");
-        if (ret == 0) {
+        if (ret == 0) {     //terminate client, if input equals "quit"
             printf("Client disconecting!\n");
             break;
         }
@@ -74,6 +73,5 @@ int main(int argc, char *argv[]) {
         printf("%s\n", buffer);
     }
     close(sockfd);
-    // shutdown(sockfd,SHUT_RDWR);
     exit(EXIT_SUCCESS);
 }
