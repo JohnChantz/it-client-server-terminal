@@ -15,13 +15,14 @@ void error(const char *msg) {
     perror(msg);
     exit(0);
 }
+
 void signal_handler(int signum) {
-    printf("Termination signal detected, client terminating!\n");
-    char *buffer="quit";
+    printf("\nTermination signal detected, client terminating!\n");
+    char *buffer = "quit";
     n = write(sockfd, buffer, strlen(buffer));
     if (n < 0)
-            error("ERROR writing to socket");
-    close(sockfd);        
+        error("ERROR writing to socket");
+    close(sockfd);
     exit(signum);
 }
 
@@ -31,7 +32,7 @@ int main(int argc, char *argv[]) {
     struct hostent *server;
     char buffer[1024];
 
-    signal(SIGINT,signal_handler);
+    signal(SIGINT, signal_handler);
 
     if (argc < 3) {
         fprintf(stderr, "usage %s hostname port\n", argv[0]);
@@ -49,20 +50,20 @@ int main(int argc, char *argv[]) {
     }
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr,(char *)&serv_addr.sin_addr.s_addr,server->h_length);
+    bcopy((char *) server->h_addr, (char *) &serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(portno);
     if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
         error("ERROR connecting");
     }
-    while(1) {
-        fprintf(stdout,"%s:>",argv[1]);
+    while (1) {
+        fprintf(stdout, "%s:>", argv[1]);
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);
-        int ret=strcmp(buffer,"quit\n");
+        int ret = strcmp(buffer, "quit\n");
         n = write(sockfd, buffer, strlen(buffer));
         if (n < 0)
             error("ERROR writing to socket");
-        if(ret==0){   
+        if (ret == 0) {
             printf("Client disconecting!\n");
             break;
         }

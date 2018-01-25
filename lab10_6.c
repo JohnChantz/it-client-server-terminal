@@ -6,21 +6,18 @@
 
 void runpipe();
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int pid, status;
     int fd[2];
     pipe(fd);
 
-    switch (pid = fork())
-    {
+    switch (pid = fork()) {
         case 0: /* child */
             runpipe(fd);
             exit(0);
         default: /* parent */
             while ((pid = wait(&status)) != -1) {
-                fprintf(stderr, "process %d exits with %d\n",
-                        pid, WEXITSTATUS(status));
+                fprintf(stderr, "process %d exits with %d\n", pid, WEXITSTATUS(status));
                 exit(0);
             }
         case -1:
@@ -30,14 +27,14 @@ int main(int argc, char **argv)
     exit(0);
 }
 
-char *cmd1[] = { "ls", "-al", "/", 0  };
-char *cmd2[] = { "tr", "a-z", "A-Z", 0  };
+char *cmd1[] = {"ls", "-al", "/", 0};
+char *cmd2[] = {"tr", "a-z", "A-Z", 0};
+
 /* For solaris use /usr/xpg4/bin/tr */
 
-void runpipe(int pfd[]){
+void runpipe(int pfd[]) {
     int pid;
-    switch (pid = fork())
-    {
+    switch (pid = fork()) {
 
         case 0: /* child */
             dup2(pfd[0], 0);
